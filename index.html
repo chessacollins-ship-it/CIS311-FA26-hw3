@@ -2,51 +2,287 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- displays site properly based on user's device -->
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
-  
   <title>Frontend Mentor | Contact form</title>
-
-  <!-- Feel free to remove these styles or customise in your own stylesheet 👍 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    .attribution { font-size: 0.6875rem; text-align: center; }
+    :root {
+      --green-200: hsl(148, 38%, 91%);
+      --green-600: hsl(169, 82%, 27%);
+      --green-900: hsl(169, 82%, 18%);
+      --red: hsl(0, 66%, 54%);
+      --white: hsl(0, 0%, 100%);
+      --grey-500: hsl(186, 15%, 59%);
+      --grey-900: hsl(187, 24%, 22%);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+    body {
+      font-family: "Karla", system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--grey-900);
+      background: var(--green-200);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; overflow: hidden;
+      clip: rect(0 0 0 0); white-space: nowrap;
+    }
+ 
+    /* Toast */
+    .toast-region {
+      position: fixed; top: 1rem; left: 0; right: 0;
+      display: flex; justify-content: center; padding: 0 1rem;
+      pointer-events: none; z-index: 10;
+    }
+    .toast {
+      background: var(--grey-900); color: var(--white);
+      border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 450px;
+      box-shadow: 0 4px 12px hsl(0 0% 0% / .2);
+      transform: translateY(-1rem); opacity: 0; visibility: hidden;
+      transition: opacity .25s, transform .25s, visibility .25s;
+    }
+    .toast.is-visible { opacity: 1; transform: none; visibility: visible; }
+    .toast h2 { font-size: 1rem; display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; }
+    .toast h2 svg { flex: none; }
+    .toast p { font-size: .9375rem; color: var(--green-200); }
+ 
+    /* Card */
+    main { width: 100%; max-width: 736px; margin-block: 1rem; }
+    .card { background: var(--white); border-radius: 16px; padding: 1.5rem; }
+    h1 { font-size: 2rem; line-height: 1.1; margin-bottom: 1.5rem; }
+    form { display: grid; gap: 1.5rem; }
+    .row { display: grid; gap: 1.5rem; }
+    .field { display: grid; gap: .5rem; align-content: start; }
+    fieldset { border: 0; padding: 0; min-width: 0; }
+    label, legend { font-size: 1rem; color: var(--grey-900); padding: 0; }
+    .req { margin-left: .25rem; color: var(--green-600); }
+ 
+    input[type="text"], input[type="email"], textarea {
+      font: inherit; color: var(--grey-900); width: 100%;
+      padding: .75rem 1.5rem; background: var(--white);
+      border: 1px solid var(--grey-500); border-radius: 8px;
+      cursor: pointer; transition: border-color .15s;
+    }
+    textarea { min-height: 240px; resize: vertical; }
+    input[type="text"], input[type="email"] { padding-block: .75rem; }
+    input:hover, textarea:hover { border-color: var(--green-600); }
+    input:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--green-600); outline-offset: 2px; border-color: var(--green-600);
+    }
+    [aria-invalid="true"] { border-color: var(--red) !important; }
+    .error { color: var(--red); font-size: .9375rem; }
+    .error:empty { display: none; }
+ 
+    /* Radios */
+    .radios { display: grid; gap: 1rem; margin-top: .5rem; }
+    .choice {
+      position: relative; display: flex; align-items: center; gap: .75rem;
+      padding: .75rem 1.5rem; border: 1px solid var(--grey-500); border-radius: 8px;
+      cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .choice:hover { border-color: var(--green-600); }
+    .choice:has(input:checked) { background: var(--green-200); border-color: var(--green-600); }
+    .choice:has(input:focus-visible), .consent:has(input:focus-visible) {
+      outline: 2px solid var(--green-600); outline-offset: 2px;
+    }
+    .choice input, .consent input {
+      appearance: none; flex: none; margin: 0; cursor: pointer;
+      width: 1.25rem; height: 1.25rem; border: 2px solid var(--grey-500);
+    }
+    .choice input { border-radius: 50%; display: grid; place-content: center; }
+    .choice input:checked { border-color: var(--green-600); }
+    .choice input:checked::after {
+      content: ""; width: .625rem; height: .625rem; border-radius: 50%; background: var(--green-600);
+    }
+    .choice span { font-weight: 700; }
+    .choice span, .consent span { cursor: pointer; }
+ 
+    /* Consent */
+    .consent { display: flex; align-items: center; gap: 1rem; cursor: pointer; width: fit-content; }
+    .consent input { border-radius: 2px; border-color: var(--grey-900); }
+    .consent input:checked {
+      background: var(--green-600) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='white' stroke-width='2' d='M3 8.5l3.2 3L13 4.5'/%3E%3C/svg%3E") center/100% no-repeat;
+      border-color: var(--green-600);
+    }
+    .consent-wrap { display: grid; gap: .5rem; }
+ 
+    button {
+      font: inherit; font-weight: 700; color: var(--white); background: var(--green-600);
+      border: 0; border-radius: 8px; padding: 1rem; width: 100%; cursor: pointer;
+      transition: background .15s;
+    }
+    button:hover { background: var(--grey-900); }
+    button:focus-visible { outline: 2px solid var(--grey-900); outline-offset: 3px; }
+ 
+    .attribution { font-size: 0.6875rem; text-align: center; margin-top: 1rem; }
     .attribution a { color: hsl(228, 45%, 44%); }
+ 
+    @media (min-width: 40em) {
+      body { padding: 2rem; justify-content: center; }
+      .card { padding: 2.5rem; }
+      .row { grid-template-columns: 1fr 1fr; }
+      .radios { grid-template-columns: 1fr 1fr; }
+      .toast-region { top: 1.5rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
   </style>
 </head>
 <body>
-
-  Contact Us
-
-  First Name
-  This field is required
-
-  Last Name
-  This field is required
-
-  Email Address
-  Please enter a valid email address
-  This field is required
-
-  Query Type
-  General Enquiry
-  Support Request
-  Please select a query type
-
-  Message
-  This field is required
-
-  I consent to being contacted by the team
-  To submit this form, please consent to being contacted
-
-  Submit
-
-  Message Sent!
-  Thanks for completing the form. We'll be in touch soon!
-  
+ 
+  <div class="toast-region">
+    <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="10" cy="10" r="9" stroke="#fff" stroke-width="1.5"/>
+          <path d="M6 10.3l2.6 2.5L14 7.5" stroke="#fff" stroke-width="1.5" fill="none"/>
+        </svg>
+        Message Sent!
+      </h2>
+      <p>Thanks for completing the form. We'll be in touch soon!</p>
+    </div>
+  </div>
+ 
+  <main>
+    <div class="card">
+      <h1>Contact Us</h1>
+ 
+      <form id="form" novalidate>
+        <div class="row">
+          <div class="field">
+            <label for="first-name">First Name<span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="first-name" name="first-name" autocomplete="given-name"
+                   required aria-required="true" aria-describedby="first-name-error">
+            <p class="error" id="first-name-error"></p>
+          </div>
+          <div class="field">
+            <label for="last-name">Last Name<span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="last-name" name="last-name" autocomplete="family-name"
+                   required aria-required="true" aria-describedby="last-name-error">
+            <p class="error" id="last-name-error"></p>
+          </div>
+        </div>
+ 
+        <div class="field">
+          <label for="email">Email Address<span class="req" aria-hidden="true">*</span></label>
+          <input type="email" id="email" name="email" autocomplete="email"
+                 required aria-required="true" aria-describedby="email-error">
+          <p class="error" id="email-error"></p>
+        </div>
+ 
+        <fieldset class="field" aria-describedby="query-error">
+          <legend>Query Type<span class="req" aria-hidden="true">*</span></legend>
+          <div class="radios">
+            <label class="choice"><input type="radio" name="query" value="general" required aria-required="true"><span>General Enquiry</span></label>
+            <label class="choice"><input type="radio" name="query" value="support"><span>Support Request</span></label>
+          </div>
+          <p class="error" id="query-error"></p>
+        </fieldset>
+ 
+        <div class="field">
+          <label for="message">Message<span class="req" aria-hidden="true">*</span></label>
+          <textarea id="message" name="message" required aria-required="true" aria-describedby="message-error"></textarea>
+          <p class="error" id="message-error"></p>
+        </div>
+ 
+        <div class="consent-wrap">
+          <label class="consent">
+            <input type="checkbox" id="consent" name="consent" required aria-required="true" aria-describedby="consent-error">
+            <span>I consent to being contacted by the team<span class="req" aria-hidden="true">*</span></span>
+          </label>
+          <p class="error" id="consent-error"></p>
+        </div>
+ 
+        <button type="submit">Submit</button>
+      </form>
+    </div>
+  </main>
+ 
   <footer class="attribution">
-    Challenge by <a href="https://www.frontendmentor.io?ref=challenge">Frontend Mentor</a>. 
+    Challenge by <a href="https://www.frontendmentor.io?ref=challenge">Frontend Mentor</a>.
     Coded by <a href="#">Your Name Here</a>.
   </footer>
+ 
+  <script>
+    const form = document.getElementById('form');
+    const toast = document.getElementById('toast');
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let toastTimer;
+ 
+    const checks = [
+      { id: 'first-name', errorId: 'first-name-error', test: el => el.value.trim() ? '' : 'This field is required' },
+      { id: 'last-name',  errorId: 'last-name-error',  test: el => el.value.trim() ? '' : 'This field is required' },
+      { id: 'email', errorId: 'email-error', test: el => {
+          const v = el.value.trim();
+          if (!v) return 'This field is required';
+          return emailPattern.test(v) ? '' : 'Please enter a valid email address';
+      }},
+      { id: 'message', errorId: 'message-error', test: el => el.value.trim() ? '' : 'This field is required' },
+      { id: 'consent', errorId: 'consent-error', test: el => el.checked ? '' : 'To submit this form, please consent to being contacted' }
+    ];
+ 
+    function setError(input, errorEl, message) {
+      errorEl.textContent = message;
+      if (message) input.setAttribute('aria-invalid', 'true');
+      else input.removeAttribute('aria-invalid');
+    }
+ 
+    function validateField(check) {
+      const input = document.getElementById(check.id);
+      const errorEl = document.getElementById(check.errorId);
+      const msg = check.test(input);
+      setError(input, errorEl, msg);
+      return msg ? input : null;
+    }
+ 
+    function validateQuery() {
+      const radios = form.querySelectorAll('input[name="query"]');
+      const errorEl = document.getElementById('query-error');
+      const ok = [...radios].some(r => r.checked);
+      errorEl.textContent = ok ? '' : 'Please select a query type';
+      radios.forEach(r => ok ? r.removeAttribute('aria-invalid') : r.setAttribute('aria-invalid', 'true'));
+      radios[0].setAttribute('aria-describedby', 'query-error');
+      return ok ? null : radios[0];
+    }
+ 
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const invalid = [...checks.map(validateField), validateQuery()].filter(Boolean);
+ 
+      if (invalid.length) {
+        // Move focus to the first invalid control (DOM order) so screen readers announce its error
+        const first = invalid.sort((a, b) =>
+          a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)[0];
+        first.focus();
+        return;
+      }
+ 
+      form.reset();
+      toast.classList.add('is-visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 5000);
+    });
+ 
+    // Clear errors as the user fixes them
+    checks.forEach(check => {
+      const input = document.getElementById(check.id);
+      const evt = input.type === 'checkbox' ? 'change' : 'input';
+      input.addEventListener(evt, () => {
+        if (input.getAttribute('aria-invalid') === 'true') validateField(check);
+      });
+    });
+    form.querySelectorAll('input[name="query"]').forEach(r =>
+      r.addEventListener('change', validateQuery));
+  </script>
 </body>
 </html>
+ 
